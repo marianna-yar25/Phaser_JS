@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Juego con Cursores - Phaser 3</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+</head>
+<body>
+<script>
+  const config = {
+  type: Phaser.AUTO,
+  width: 800,
+  height: 600,
+  backgroundColor: "#DDC9C7",
+  physics: {
+    default: "arcade",
+    arcade: {
+      gravity: { y: 0 },
+      debug: false
+    }
+  },
+  scene: {
+    preload: preload,
+    create: create,
+    update: update
+  }
+};
+
+let player;
+let star;
+let bombs;
+let cursors;
+let score = 50;
+let scoreText;
+let gameOver = false;
+let winText;
+
+const game = new Phaser.Game(config);
+
+function preload() {
+  this.load.image("star", "https://labs.phaser.io/assets/demoscene/star.png");
+  this.load.image("bomb", "https://labs.phaser.io/assets/games/breakout/blue.png");
+}
+
+function create() {
+  player = this.add.rectangle(400, 300, 40, 40, 0xff0000);
+  this.physics.add.existing(player);
+
+  star = this.physics.add.image(200, 200, "star").setScale(0.5);
+
+  bombs = this.physics.add.group();
+  for (let i = 0; i < 5; i++) {
+    let bomb = bombs.create(Phaser.Math.Between(50, 750), Phaser.Math.Between(50, 550), "bomb");
+    bomb.setCollideWorldBounds(true);
+    bomb.setBounce(1);
+    bomb.setVelocity(Phaser.Math.Between(-200, 200), Phaser.Math.Between(-200, 200));
+  }
+
+  this.physics.add.overlap(player, star, collectStar, null, this);
+  this.physics.add.overlap(player, bombs, hitBomb, null, this);
+
+  scoreText = this.add.text(16, 16, "Puntos: " + score, { fontSize: "32px", fill: "#000" });
+  winText = this.add.text(200, 250, "", { fontSize: "48px", fill: "#000" });
+
+  cursors = this.input.keyboard.createCursorKeys();
+}
+
+function update() {
+  if (gameOver) return;
+
+  player.body.setVelocity(0);
+
+  if (cursors.left.isDown) {
+    player.body.setVelocityX(-200);
+  } else if (cursors.right.isDown) {
+    player.body.setVelocityX(200);
+  }
+
+  if (cursors.up.isDown) {
+    player.body.setVelocityY(-200);
+  } else if (cursors.down.isDown) {
+    player.body.setVelocityY(200);
+  }
+}
+
+function collectStar(player, star) {
+  star.x = Phaser.Math.Between(50, 750);
+  star.y = Phaser.Math.Between(50, 550);
+
+  score += 10;
+  scoreText.setText("Puntos: " + score);
+
+  if (score >= 100) {
+    winText.setText("¡Ganaste!");
+    endGame(this);
+  }
+}
+
+function hitBomb(player, bomb) {
+  // Restar puntos solo una vez
+  score -= 10;
+  scoreText.setText("Puntos: " + score);
+
+  // Mover la bomba a un lugar aleatorio en la pantalla
+  bomb.x = Phaser.Math.Between(50, 750);
+  bomb.y = Phaser.Math.Between(50, 550);
+
+  // Darle una nueva velocidad aleatoria
+  bomb.setVelocity(Phaser.Math.Between(-200, 200), Phaser.Math.Between(-200, 200));
+
+  // Verificar derrota
+  if (score <= 0) {
+    winText.setText("¡Perdiste!");
+    endGame(this);
+  }
+}
+
+
+function endGame(scene) {
+  gameOver = true;
+  scene.physics.pause(); // detener físicas
+  player.setFillStyle(0x808080); // jugador en gris
+}
+</script>
+</body>
+</html>
