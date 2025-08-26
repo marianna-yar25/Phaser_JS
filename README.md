@@ -1,2 +1,2 @@
 # Phaser_JS
-https://marianna-yar25.github.io/CV-HTML-y-CSS/
+https://marianna-yar25.github.io/Phaser_JS/
